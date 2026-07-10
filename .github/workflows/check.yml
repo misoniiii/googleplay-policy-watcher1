@@ -1,38 +1,35 @@
 name: Google Policy Watcher
- 
+
 on:
   schedule:
     - cron: '0 9 * * *'   # 매일 오후 6시 KST (UTC 기준 09:00)
   workflow_dispatch:        # 수동 실행 버튼도 사용 가능
- 
+
 permissions:
   contents: write
- 
+
 jobs:
   check-policy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
- 
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
- 
+
       - name: Install dependencies
         run: pip install requests beautifulsoup4
- 
+
       - name: Run policy check
         env:
           CHAT_WEBHOOK_URL: ${{ secrets.CHAT_WEBHOOK_URL }}
         run: python check_update.py
- 
+
       - name: Commit updated hash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add last_hash.txt
-          git diff --staged --quiet || git commit -m "chore: update policy hash"
-          git pull --rebase origin main
-          git push
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update policy hash"
+          file_pattern: last_hash.txt
